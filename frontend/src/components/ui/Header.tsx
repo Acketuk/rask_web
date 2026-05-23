@@ -6,7 +6,7 @@ import { User } from "lucide-react"
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border">
-      <div className="relative mx-auto flex h-20 max-w-6xl items-center px-4">
+      <div className="relative mx-auto flex h-20 max-w-300 items-center px-4">
         <Link href="/" aria-label="Rask home" className="absolute left-1/2 -translate-x-1/2">
           <Logo />
         </Link>
