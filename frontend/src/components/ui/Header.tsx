@@ -1,22 +1,39 @@
 import Link from "next/link";
+import { PlusCircle } from "lucide-react";
 import Logo from "@/components/ui/Logo";
-import { User } from "lucide-react"
-
+import SearchInput from "@/components/ui/SearchInput";
+import FavoritesLink from "@/components/ui/FavoritesLink";
+import UserMenu from "@/components/ui/UserMenu";
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border">
-      <div className="relative mx-auto flex h-20 max-w-300 items-center px-4">
-        <Link href="/" aria-label="Rask home" className="absolute left-1/2 -translate-x-1/2">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-6">
+        <Link href="/" aria-label="Rask home" className="shrink-0">
           <Logo />
         </Link>
-        <Link
-          href="/sign-in"
-          aria-label="Account"
-          className="ml-auto rounded-full p-2 transition-colors hover:bg-muted"
-        >
-          <User className="size-5" />
-        </Link>
+
+        <div className="mx-4 hidden w-full max-w-lg md:block">
+          <SearchInput />
+        </div>
+
+        <nav className="ml-auto flex shrink-0 items-center gap-3">
+          <Link
+            href="/ads/post"
+            className="hidden items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:flex"
+          >
+            <PlusCircle className="size-4" />
+            Post a Service
+          </Link>
+
+          <FavoritesLink />
+
+          <UserMenu />
+        </nav>
+      </div>
+
+      <div className="border-t border-border px-6 py-2.5 md:hidden">
+        <SearchInput />
       </div>
     </header>
   );

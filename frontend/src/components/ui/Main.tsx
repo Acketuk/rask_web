@@ -8,7 +8,7 @@ export default function Main({
   className?: string;
 }) {
   return (
-    <main className="mx-auto w-full max-w-300 px-4 py-8">
+    <main className="mx-auto w-full max-w-7xl px-6 py-8">
       {children}
     </main>
   );

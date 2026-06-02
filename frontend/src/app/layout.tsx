@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
-import { Sora } from "next/font/google";
+import localFont from "next/font/local";
 import { Suspense } from "react";
 import Header from "@/components/ui/Header";
 import Main from "@/components/ui/Main";
 import Footer from "@/components/ui/Footer";
+import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
-const sora = Sora({
-  variable: "--font-sora",
-  subsets: ["latin"],
+const satoshi = localFont({
+  src: [
+    { path: "../../public/fonts/Satoshi-Variable.woff2", style: "normal" },
+    { path: "../../public/fonts/Satoshi-VariableItalic.woff2", style: "italic" },
+  ],
+  variable: "--font-satoshi",
 });
 
 export const metadata: Metadata = {
@@ -24,14 +28,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} h-full antialiased`}
+      className={`${satoshi.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <Header />
-        <Main>{children}</Main>
-        <Suspense>
-          <Footer />
-        </Suspense>
+        <AuthProvider>
+          <Header />
+          <Main>{children}</Main>
+          <Suspense>
+            <Footer />
+          </Suspense>
+        </AuthProvider>
       </body>
     </html>
   );
