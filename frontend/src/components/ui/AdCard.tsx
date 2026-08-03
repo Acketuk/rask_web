@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { MapPin, Clock } from "lucide-react";
+import { MapPin } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
+import { useAutoTranslate } from "@/hooks/useAutoTranslate";
 
 export type Ad = {
   id: string;
@@ -10,86 +13,89 @@ export type Ad = {
   created_at: { Time: string; Valid: boolean } | null;
   category_id: string;
   user_id: string;
-  attributes: { location?: string; provider?: string; delivery?: string; availability?: string } | null;
+  attributes: { location?: string; provider?: string; delivery?: string; availability?: string; image?: string } | null;
 };
-
-// ─── Per-category gradients ───────────────────────────────────────────────
 
 const GRADIENTS: Record<string, string> = {
-  "019e0ed4-e692-7d25-8095-114e3985b50b": "linear-gradient(135deg,#4f46e5,#3730a3)",
-  "019e0ed4-e692-7d3a-bf74-fbb96566e1de": "linear-gradient(135deg,#7c3aed,#4c1d95)",
-  "019e0ed4-e692-7d04-8925-6a0aab350b5d": "linear-gradient(135deg,#ec4899,#9d174d)",
-  "019e0ed4-e692-7ca9-82fd-e02ce5452121": "linear-gradient(135deg,#0d9488,#0c4a6e)",
-  "019e0ed4-e692-7d5c-8620-8c3802bfb293": "linear-gradient(135deg,#334155,#020617)",
-  "019e0ed4-e692-7d2f-9dd4-5f08d03de4b8": "linear-gradient(135deg,#f43f5e,#7c3aed)",
-  "019e0ed4-e692-7cd9-8740-19d78979e463": "linear-gradient(135deg,#d97706,#7c2d12)",
+  "019e0ed4-e692-7d25-8095-114e3985b50b": "linear-gradient(135deg,#1e1b4b,#312e81)",
+  "019e0ed4-e692-7d3a-bf74-fbb96566e1de": "linear-gradient(135deg,#1a0533,#4c1d95)",
+  "019e0ed4-e692-7d04-8925-6a0aab350b5d": "linear-gradient(135deg,#500724,#9d174d)",
+  "019e0ed4-e692-7ca9-82fd-e02ce5452121": "linear-gradient(135deg,#042f2e,#115e59)",
+  "019e0ed4-e692-7d5c-8620-8c3802bfb293": "linear-gradient(135deg,#0c0a09,#292524)",
+  "019e0ed4-e692-7d2f-9dd4-5f08d03de4b8": "linear-gradient(135deg,#450a0a,#7f1d1d)",
+  "019e0ed4-e692-7cd9-8740-19d78979e463": "linear-gradient(135deg,#422006,#78350f)",
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────
+const FALLBACK = "linear-gradient(135deg,#1c1917,#292524)";
 
 function initials(name?: string) {
   if (!name) return "?";
   return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
 
-// ─── Component ────────────────────────────────────────────────────────────
-
-const FALLBACK_GRADIENT = "linear-gradient(135deg,#6b7280,#1f2937)";
-
 export default function AdCard({ ad }: { ad: Ad }) {
-  const gradient = GRADIENTS[ad.category_id] ?? FALLBACK_GRADIENT;
-  const provider = ad.attributes?.provider;
-  const location = ad.attributes?.location ?? "Lithuania";
-  const delivery = ad.attributes?.delivery;
+  const gradient  = GRADIENTS[ad.category_id] ?? FALLBACK;
+  const provider  = ad.attributes?.provider;
+  const location  = ad.attributes?.location ?? "Lithuania";
+  const image     = ad.attributes?.image;
+
+  const title       = useAutoTranslate(ad.title);
+  const description = useAutoTranslate(ad.description);
 
   return (
     <Link
       href={`/ads/${ad.id}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+      className="group flex flex-col overflow-hidden rounded-xl bg-card shadow-[0_1px_4px_rgb(0_0_0/0.06),0_4px_16px_rgb(0_0_0/0.04)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_24px_rgb(0_0_0/0.12)]"
     >
-      <div className="relative aspect-16/10 w-full" style={{ background: gradient }}>
-        <div className="absolute right-2.5 top-2.5">
+      {/* Image */}
+      <div
+        className="relative aspect-4/3 w-full overflow-hidden"
+        style={{ background: gradient }}
+      >
+        {image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image}
+            alt={ad.title}
+            className="absolute inset-0 h-full w-full object-cover opacity-85 transition-transform duration-500 group-hover:scale-105"
+          />
+        )}
+        <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
+        <div className="absolute right-3 top-3">
           <FavoriteButton adId={ad.id} />
+        </div>
+        {/* Price on image */}
+        <div className="absolute bottom-3 left-3">
+          <span className="rounded-lg bg-primary px-2.5 py-1 text-sm font-black text-primary-foreground">
+            {ad.price.toLocaleString()} €
+          </span>
         </div>
       </div>
 
-      {/* Card body */}
-      <div className="flex flex-1 flex-col gap-2.5 p-4">
+      {/* Body */}
+      <div className="flex flex-1 flex-col gap-2 p-4">
         <h3 className="line-clamp-2 text-sm font-bold leading-snug text-foreground transition-colors group-hover:text-primary">
-          {ad.title}
+          {title}
         </h3>
 
-        <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-          {ad.description}
+        <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground flex-1">
+          {description}
         </p>
 
-        <div className="mt-auto flex items-center gap-1.5 pt-1 text-xs text-muted-foreground">
-          <MapPin className="size-3 shrink-0" />
-          <span>{location}</span>
-          {delivery && (
-            <>
-              <span className="mx-0.5 opacity-40">·</span>
-              <Clock className="size-3 shrink-0" />
-              <span>{delivery}</span>
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between border-t border-border pt-3">
-          <div className="flex items-center gap-2">
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-3 mt-1 border-t border-border">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <div
-              className="flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+              className="flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-black text-white"
               style={{ background: gradient }}
             >
               {initials(provider)}
             </div>
-            <span className="max-w-28 truncate text-xs font-medium text-muted-foreground">
-              {provider ?? "Provider"}
-            </span>
+            <span className="max-w-24 truncate font-medium">{provider ?? "Provider"}</span>
           </div>
-          <p className="text-base font-black text-foreground">
-            {ad.price.toLocaleString()} €
-          </p>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="size-3" />
+            {location}
+          </span>
         </div>
       </div>
     </Link>

@@ -12,12 +12,12 @@ export default function FavoritesLink() {
   return (
     <Link
       href="/favorites"
-      className="relative flex size-9 items-center justify-center rounded-full border border-border transition hover:bg-muted"
+      className="relative flex size-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-all hover:border-primary/30 hover:text-primary"
       aria-label="Saved services"
     >
       <Heart className="size-4" />
       {mounted && label && (
-        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-0.5 text-[10px] font-bold leading-none text-white">
+        <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-black text-primary-foreground">
           {label}
         </span>
       )}

@@ -5,6 +5,7 @@ import Header from "@/components/ui/Header";
 import Main from "@/components/ui/Main";
 import Footer from "@/components/ui/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import "./globals.css";
 
 const satoshi = localFont({
@@ -31,13 +32,15 @@ export default function RootLayout({
       className={`${satoshi.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <AuthProvider>
-          <Header />
-          <Main>{children}</Main>
-          <Suspense>
-            <Footer />
-          </Suspense>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <Header />
+            <Main>{children}</Main>
+            <Suspense>
+              <Footer />
+            </Suspense>
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

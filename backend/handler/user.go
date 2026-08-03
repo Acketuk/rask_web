@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Acketuk/rask_web.git/middleware"
 	"github.com/Acketuk/rask_web.git/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -90,6 +91,20 @@ func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondWithJSON(w, http.StatusOK, map[string]string{"message": "logged out"})
+}
+
+func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok {
+		RespondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	user, err := h.svc.GetByID(r.Context(), userID)
+	if err != nil {
+		RespondWithError(w, http.StatusNotFound, "user not found")
+		return
+	}
+	RespondWithJSON(w, http.StatusOK, user)
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Acketuk/rask_web.git/handler"
+	"github.com/Acketuk/rask_web.git/hub"
 	"github.com/Acketuk/rask_web.git/internal/db"
 	"github.com/Acketuk/rask_web.git/service"
 	"github.com/go-chi/chi/v5"
@@ -33,8 +34,12 @@ func main() {
 	categoryHandler := handler.NewCategoryHandler(service.NewCategoryService(queries))
 	adHandler := handler.NewAdHandler(service.NewAdService(queries))
 
+	chatHub := hub.New()
+	go chatHub.Run()
+	chatHandler := handler.NewChatHandler(service.NewChatService(queries), chatHub, jwtKey)
+
 	router := chi.NewRouter()
-	initRouter(router, userHandler, categoryHandler, adHandler)
+	initRouter(router, userHandler, categoryHandler, adHandler, chatHandler, jwtKey)
 
 	server := &http.Server{
 		Addr:    ":" + port,

@@ -52,6 +52,109 @@ func (q *Queries) CreateAd(ctx context.Context, arg CreateAdParams) (Ad, error) 
 	return i, err
 }
 
+const getAdsByUser = `-- name: GetAdsByUser :many
+SELECT id, title, description, price, created_at, user_id, category_id, attributes
+FROM ads
+WHERE user_id = $1
+ORDER BY updated_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type GetAdsByUserParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	Limit  int32     `json:"limit"`
+	Offset int32     `json:"offset"`
+}
+
+func (q *Queries) GetAdsByUser(ctx context.Context, arg GetAdsByUserParams) ([]GetAllAdsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAdsByUser, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllAdsRow
+	for rows.Next() {
+		var i GetAllAdsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.Price,
+			&i.CreatedAt,
+			&i.UserID,
+			&i.CategoryID,
+			&i.Attributes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const countAds = `-- name: CountAds :one
+SELECT COUNT(*) FROM ads
+`
+
+func (q *Queries) CountAds(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAds)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const searchAds = `-- name: SearchAds :many
+SELECT id, title, description, price, created_at, user_id, category_id, attributes
+FROM ads
+WHERE title ILIKE '%' || $1 || '%' OR description ILIKE '%' || $1 || '%'
+ORDER BY updated_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type SearchAdsParams struct {
+	Query  string `json:"query"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+func (q *Queries) SearchAds(ctx context.Context, arg SearchAdsParams) ([]GetAllAdsRow, error) {
+	rows, err := q.db.QueryContext(ctx, searchAds, arg.Query, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllAdsRow
+	for rows.Next() {
+		var i GetAllAdsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.Price,
+			&i.CreatedAt,
+			&i.UserID,
+			&i.CategoryID,
+			&i.Attributes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const deleteAd = `-- name: DeleteAd :exec
 DELETE FROM ads
 WHERE id = $1
@@ -63,9 +166,10 @@ func (q *Queries) DeleteAd(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAdsByCategory = `-- name: GetAdsByCategory :many
-SELECT id, title, price, created_at, user_id, category_id
+SELECT id, title, description, price, created_at, user_id, category_id, attributes
 FROM ads
 WHERE category_id = $1
+   OR category_id IN (SELECT id FROM categories WHERE parent_id = $1)
 ORDER BY updated_at DESC
 LIMIT $2 OFFSET $3
 `
@@ -77,12 +181,14 @@ type GetAdsByCategoryParams struct {
 }
 
 type GetAdsByCategoryRow struct {
-	ID         uuid.UUID    `json:"id"`
-	Title      string       `json:"title"`
-	Price      int32        `json:"price"`
-	CreatedAt  sql.NullTime `json:"created_at"`
-	UserID     uuid.UUID    `json:"user_id"`
-	CategoryID uuid.UUID    `json:"category_id"`
+	ID          uuid.UUID             `json:"id"`
+	Title       string                `json:"title"`
+	Description string                `json:"description"`
+	Price       int32                 `json:"price"`
+	CreatedAt   sql.NullTime          `json:"created_at"`
+	UserID      uuid.UUID             `json:"user_id"`
+	CategoryID  uuid.UUID             `json:"category_id"`
+	Attributes  pqtype.NullRawMessage `json:"attributes"`
 }
 
 func (q *Queries) GetAdsByCategory(ctx context.Context, arg GetAdsByCategoryParams) ([]GetAdsByCategoryRow, error) {
@@ -97,10 +203,12 @@ func (q *Queries) GetAdsByCategory(ctx context.Context, arg GetAdsByCategoryPara
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
+			&i.Description,
 			&i.Price,
 			&i.CreatedAt,
 			&i.UserID,
 			&i.CategoryID,
+			&i.Attributes,
 		); err != nil {
 			return nil, err
 		}
@@ -116,7 +224,7 @@ func (q *Queries) GetAdsByCategory(ctx context.Context, arg GetAdsByCategoryPara
 }
 
 const getAllAds = `-- name: GetAllAds :many
-SELECT id, title, price, created_at, user_id, category_id
+SELECT id, title, description, price, created_at, user_id, category_id, attributes
 FROM ads
 ORDER BY updated_at DESC
 LIMIT $1 OFFSET $2
@@ -128,12 +236,14 @@ type GetAllAdsParams struct {
 }
 
 type GetAllAdsRow struct {
-	ID         uuid.UUID    `json:"id"`
-	Title      string       `json:"title"`
-	Price      int32        `json:"price"`
-	CreatedAt  sql.NullTime `json:"created_at"`
-	UserID     uuid.UUID    `json:"user_id"`
-	CategoryID uuid.UUID    `json:"category_id"`
+	ID          uuid.UUID             `json:"id"`
+	Title       string                `json:"title"`
+	Description string                `json:"description"`
+	Price       int32                 `json:"price"`
+	CreatedAt   sql.NullTime          `json:"created_at"`
+	UserID      uuid.UUID             `json:"user_id"`
+	CategoryID  uuid.UUID             `json:"category_id"`
+	Attributes  pqtype.NullRawMessage `json:"attributes"`
 }
 
 func (q *Queries) GetAllAds(ctx context.Context, arg GetAllAdsParams) ([]GetAllAdsRow, error) {
@@ -148,10 +258,12 @@ func (q *Queries) GetAllAds(ctx context.Context, arg GetAllAdsParams) ([]GetAllA
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
+			&i.Description,
 			&i.Price,
 			&i.CreatedAt,
 			&i.UserID,
 			&i.CategoryID,
+			&i.Attributes,
 		); err != nil {
 			return nil, err
 		}
