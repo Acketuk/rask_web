@@ -43,3 +43,6 @@ frontend/next-env.d.ts
 # go
 backend/rask
 backend/*.exe
+
+# docker
+docker-compose.yml

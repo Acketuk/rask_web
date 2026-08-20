@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func initRouter(r *chi.Mux, u *handler.UserHandler, c *handler.CategoryHandler, a *handler.AdHandler, ch *handler.ChatHandler, jwtSecret string) {
+func initRouter(r *chi.Mux, u *handler.UserHandler, c *handler.CategoryHandler, a *handler.AdHandler, jwtSecret string) {
 	r.Use(middleware.CORS)
 
 	r.Get("/health", handler.CheckHealth)
@@ -38,15 +38,6 @@ func initRouter(r *chi.Mux, u *handler.UserHandler, c *handler.CategoryHandler, 
 				r.Put("/{id}", c.UpdateCategory)
 				r.Delete("/{id}", c.DeleteCategory)
 			})
-		})
-
-		r.Get("/ws", ch.ServeWS)
-
-		r.Route("/conversations", func(r chi.Router) {
-			r.Use(middleware.RequireAuth(jwtSecret))
-			r.Get("/", ch.ListConversations)
-			r.Post("/", ch.StartConversation)
-			r.Get("/{id}", ch.GetConversation)
 		})
 
 		r.Route("/ads", func(r chi.Router) {
